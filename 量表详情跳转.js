@@ -1,6 +1,17 @@
 document.addEventListener('DOMContentLoaded',()=>{
-  const create=document.querySelector('.title-row .button.primary');if(create)create.onclick=()=>location.href='新增量表.html';
-  document.querySelector('#detail')?.remove();
-  const codes={phq:'PHQ-9 抑郁筛查量表',ecog:'ECOG 体力状况评分',mms:'用药依从性量表',nrs:'NRS 疼痛评分量表'};
-  document.querySelectorAll('#scales a[href="#detail"]').forEach(a=>{const key=(a.getAttribute('onclick')||'').match(/'([^']+)'/)?.[1];if(!key)return;a.removeAttribute('onclick');a.href=`量表详情.html?scale=${key}`;a.title=`查看${codes[key]}详情`;});
+  document.querySelector('#createScale')?.addEventListener('click',()=>location.href='新增量表.html');
+  const form=document.querySelector('#scaleFilters'),search=document.querySelector('#schemeSearch'),project=document.querySelector('#projectFilter'),start=document.querySelector('#createdStart'),end=document.querySelector('#createdEnd'),rows=[...document.querySelectorAll('#scales tbody tr')],empty=document.querySelector('#emptyScale'),total=document.querySelector('#scaleTotal');
+  const applyFilters=()=>{
+    const keyword=search.value.trim().toLowerCase(),projectName=project.value,startDate=start.value,endDate=end.value;let visible=0;
+    rows.forEach(row=>{const show=(!keyword||row.dataset.scheme.toLowerCase().includes(keyword))&&(!projectName||row.dataset.project===projectName)&&(!startDate||row.dataset.created>=startDate)&&(!endDate||row.dataset.created<=endDate);row.hidden=!show;if(show)visible++});
+    total.textContent=`当前共 ${visible} 个量表`;empty.hidden=visible!==0;
+  };
+  form?.addEventListener('submit',event=>{event.preventDefault();applyFilters()});
+  document.querySelector('#resetFilters')?.addEventListener('click',()=>{form.reset();applyFilters()});
+  search?.addEventListener('input',applyFilters);
+  project?.addEventListener('change',applyFilters);
+  document.querySelectorAll('.status-action').forEach(button=>button.addEventListener('click',()=>{
+    const row=button.closest('tr'),status=row.dataset.status==='online'?'offline':'online',pill=row.querySelector('.pill');row.dataset.status=status;
+    pill.textContent=status==='online'?'已启动':'已下架';pill.className=`pill ${status==='online'?'green':'gray'}`;button.textContent=status==='online'?'下架':'上架';
+  }));
 });
