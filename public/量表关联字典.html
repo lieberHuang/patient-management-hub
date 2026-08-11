@@ -1,4 +1,37 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>量表关联字典 | 患者管理中台</title><link rel="stylesheet" href="患者管理中台样式.css"><script src="侧栏精简.js" defer></script><script src="量表详情跳转.js" defer></script></head>
-<body><div class="app"><aside><a class="brand" href="患者管理中台-数据字典原型.html"><i>✚</i>患者管理中台</a><div class="workspace"><strong>华东临床研究中心</strong>主数据管理工作台⌄</div><p class="nav-label">页面选择</p><a class="nav" href="患者管理中台-数据字典原型.html">▤ <span>患者主数据</span></a><a class="nav" href="项目患者字典表.html">◫ <span>项目患者字典表</span></a><a class="nav active" href="量表关联字典.html">⌁ <span>量表关联字典</span></a><p class="nav-label space">数据治理</p><a class="nav">▦ <span>数据总览</span></a><p class="nav-label space">系统设置</p><a class="nav">♙ <span>用户与权限</span></a><a class="nav">⚙ <span>操作日志</span></a><div class="user"><b>王</b>王医生 · 管理员</div></aside>
-<main><header><div class="crumb">数据治理 <span>/</span> <b>量表关联字典</b></div><div class="right">♧ <span>帮助中心</span><b class="avatar">王</b></div></header><div class="content"><div class="title-row"><div><h1>量表关联字典</h1><p>统一维护量表题目与标准字典的映射，确保患者填写数据标准化存储。</p></div><button class="button primary">＋ 新增量表</button></div><section class="panel"><div class="section-head"><div><b>量表列表</b><small>共 12 个量表，43 个关联字段</small></div><input id="scaleSearch" placeholder="搜索量表名称、编码"></div><table id="scales"><thead><tr><th>量表名称</th><th>量表编码</th><th>所属项目</th><th>题目数</th><th>已关联字典</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td><b>PHQ-9 抑郁筛查量表</b><small>心理健康评估</small></td><td class="code">PHQ9</td><td>慢病管理项目</td><td>9</td><td>2 个字典</td><td><em class="pill blue">已发布</em></td><td><a href="#detail" onclick="showScale('phq')">查看详情</a></td></tr><tr><td><b>ECOG 体力状况评分</b><small>肿瘤患者状态评估</small></td><td class="code">ECOG</td><td>肿瘤随访项目</td><td>1</td><td>1 个字典</td><td><em class="pill blue">已发布</em></td><td><a href="#detail" onclick="showScale('ecog')">查看详情</a></td></tr><tr><td><b>用药依从性量表</b><small>患者用药行为评估</small></td><td class="code">MMS</td><td>慢病管理项目</td><td>8</td><td>1 个字典</td><td><em class="pill blue">已发布</em></td><td><a href="#detail" onclick="showScale('mms')">查看详情</a></td></tr><tr><td><b>NRS 疼痛评分量表</b><small>疼痛程度评估</small></td><td class="code">NRS</td><td>肿瘤随访项目</td><td>1</td><td>1 个字典</td><td><em class="pill gray">草稿</em></td><td><a href="#detail" onclick="showScale('nrs')">查看详情</a></td></tr></tbody></table></section><section class="scale-detail" id="detail"><div class="detail-title"><div><span class="eyebrow">量表详情</span><h2 id="scaleName">PHQ-9 抑郁筛查量表</h2><p id="scaleIntro">共 9 道题目 · 以下为每道题与标准字典和值域的关联关系。</p></div><button class="button ghost small" onclick="document.getElementById('detail').classList.remove('show')">收起详情</button></div><div id="questions"></div><div class="note"><b>存储规则：</b>量表填写的显示值将同步转换为字典标准编码入库；字典显示文案调整不会影响已存储的患者历史数据。</div></section></div></main></div><script src="患者管理中台交互.js"></script></body></html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>量表页 | 患者管理中台</title>
+  <link rel="stylesheet" href="患者管理中台样式.css">
+  <script src="侧栏精简.js" defer></script><script src="量表详情跳转.js" defer></script>
+</head>
+<body><div class="app">
+  <aside>
+    <a class="brand" href="患者管理中台-数据字典原型.html"><i>✚</i>患者管理中台</a><div class="workspace"><strong>华东临床研究中心</strong>主数据管理工作台⌄</div>
+    <p class="nav-label">页面选择</p><a class="nav" href="患者管理中台-数据字典原型.html">▤ <span>患者主数据</span></a><a class="nav" href="项目患者字典表.html">◫ <span>项目患者字典表</span></a><a class="nav active" href="量表关联字典.html">⌁ <span>量表关联字典</span></a>
+    <p class="nav-label space">数据治理</p><a class="nav" href="数据总览.html">▦ <span>数据总览</span></a><p class="nav-label space">系统设置</p><a class="nav">♙ <span>用户与权限</span></a><a class="nav">⚙ <span>操作日志</span></a><div class="user"><b>王</b>王医生 · 管理员</div>
+  </aside>
+  <main>
+    <header><div class="crumb">患者标签 <span>/</span> <b>量表关联字典</b></div><div class="right">♧ <span>帮助中心</span><b class="avatar">王</b></div></header>
+    <div class="content">
+      <div class="title-row"><div><h1>量表页</h1><p>展示当前全部量表，并维护量表题目与患者字典标签的关联。</p></div><button id="createScale" class="button primary">＋ 新增量表</button></div>
+      <section class="panel scale-list-panel">
+        <div class="section-head"><div><b>量表列表</b><small id="scaleTotal">当前共 4 个量表</small></div></div>
+        <form class="scale-filters" id="scaleFilters">
+          <label>方案名称<input id="schemeSearch" type="search" placeholder="请输入方案名称" autocomplete="off"></label>
+          <label>创建时间<span class="date-range"><input id="createdStart" type="date" aria-label="创建开始时间"><i>至</i><input id="createdEnd" type="date" aria-label="创建结束时间"></span></label>
+          <div class="filter-actions"><button type="submit" class="button primary small">查询</button><button type="button" class="button ghost small" id="resetFilters">重置</button></div>
+        </form>
+        <div class="table-wrap"><table id="scales"><thead><tr><th>量表名称</th><th>所属项目</th><th>量表编码</th><th>题目数量</th><th>启用字典标签</th><th>状态</th><th>操作</th></tr></thead><tbody>
+          <tr data-scheme="慢病综合管理方案" data-created="2026-06-18" data-status="online"><td><b>PHQ-9 抑郁筛查量表</b><small>关联方案：慢病综合管理方案</small></td><td>慢病管理项目</td><td class="code">PHQ9</td><td>9</td><td>2</td><td><em class="pill green">已启动</em></td><td><a class="detail-link" href="量表详情.html?scale=phq">查看详情</a><button class="text-action status-action" type="button">下架</button></td></tr>
+          <tr data-scheme="肿瘤患者随访方案" data-created="2026-06-06" data-status="online"><td><b>ECOG 体力状况评分</b><small>关联方案：肿瘤患者随访方案</small></td><td>肿瘤随访项目</td><td class="code">ECOG</td><td>1</td><td>1</td><td><em class="pill green">已启动</em></td><td><a class="detail-link" href="量表详情.html?scale=ecog">查看详情</a><button class="text-action status-action" type="button">下架</button></td></tr>
+          <tr data-scheme="慢病综合管理方案" data-created="2026-05-21" data-status="online"><td><b>用药依从性量表</b><small>关联方案：慢病综合管理方案</small></td><td>慢病管理项目</td><td class="code">MMS</td><td>8</td><td>1</td><td><em class="pill green">已启动</em></td><td><a class="detail-link" href="量表详情.html?scale=mms">查看详情</a><button class="text-action status-action" type="button">下架</button></td></tr>
+          <tr data-scheme="肿瘤疼痛管理方案" data-created="2026-04-12" data-status="offline"><td><b>NRS 疼痛评分量表</b><small>关联方案：肿瘤疼痛管理方案</small></td><td>肿瘤随访项目</td><td class="code">NRS</td><td>1</td><td>1</td><td><em class="pill gray">已下架</em></td><td><a class="detail-link" href="量表详情.html?scale=nrs">查看详情</a><button class="text-action status-action" type="button">上架</button></td></tr>
+        </tbody></table></div>
+        <p class="empty-state" id="emptyScale" hidden>暂无符合条件的量表</p>
+      </section>
+    </div>
+  </main>
+</div><script src="患者管理中台交互.js"></script></body>
+</html>
