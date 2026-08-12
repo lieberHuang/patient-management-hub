@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded',()=>{
   document.querySelector('aside .workspace')?.remove();
   const labels=document.querySelectorAll('aside .nav-label');if(labels[0])labels[0].textContent='患者标签';
-  const scaleNav=[...document.querySelectorAll('aside .nav')].find(a=>a.textContent.includes('量表关联字典'));
+  const scaleNav=[...document.querySelectorAll('aside .nav')].find(a=>a.textContent.includes('标签关联关系'));
   if(scaleNav&&!document.querySelector('.tag-nav'))scaleNav.insertAdjacentHTML('afterend','<a class="nav tag-nav" href="标签管理.html">♢ <span>标签管理</span></a>');
   const tagNav=document.querySelector('.tag-nav');if(tagNav&&!document.querySelector('.patient-tag-nav'))tagNav.insertAdjacentHTML('afterend','<a class="nav patient-tag-nav" href="患者标签.html">♧ <span>患者标签</span></a>');
   const dataHeading=[...document.querySelectorAll('aside .nav-label')].find(el=>el.textContent.includes('数据治理')),overviewNav=[...document.querySelectorAll('aside .nav')].find(a=>a.textContent.includes('数据总览')),masterNav=[...document.querySelectorAll('aside .nav')].find(a=>a.textContent.includes('患者主数据')),dictionaryNav=[...document.querySelectorAll('aside .nav')].find(a=>a.textContent.includes('项目患者字典表'));
