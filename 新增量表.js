@@ -1,23 +1,38 @@
 document.addEventListener('DOMContentLoaded',()=>{
-  const scales={
+  const sources={
+    scale:{'慢病管理项目':[{id:'base',name:'患者基础信息补充量表'},{id:'phq',name:'PHQ-9 抑郁筛查量表'}],'肿瘤随访项目':[{id:'ecog',name:'ECOG 体力状况评分'}]},
+    questionnaire:{'慢病管理项目':[{id:'phq_form',name:'PHQ-9 患者自评问卷'},{id:'adherence_form',name:'用药依从性随访问卷'}],'肿瘤随访项目':[{id:'ecog_form',name:'体力状态随访问卷'},{id:'pain_form',name:'疼痛情况随访问卷'}]}
+  };
+  const forms={
     base:{questions:[{name:'请问您的性别？',options:['男','女','未说明']},{name:'您的最高教育程度是？',options:['小学及以下','初中','高中/中专','大学及以上']}]},
     phq:{questions:[{name:'做事时提不起劲或没有兴趣',options:['完全不会','有几天','一半以上天数','几乎每天']},{name:'感到心情低落、沮丧或绝望',options:['完全不会','有几天','一半以上天数','几乎每天']}]},
-    ecog:{questions:[{name:'您的体力状态评分',options:['0 分','1 分','2 分','3 分','4 分','5 分']}]}
+    ecog:{questions:[{name:'您的体力状态评分',options:['0 分','1 分','2 分','3 分','4 分','5 分']}]},
+    phq_form:{questions:[{name:'过去两周，您是否感到情绪低落？',options:['完全没有','偶尔出现','经常出现','几乎每天']},{name:'过去两周，您是否感到精力不足？',options:['完全没有','偶尔出现','经常出现','几乎每天']}]},
+    adherence_form:{questions:[{name:'过去一周，您是否按时服药？',options:['每天按时','偶尔漏服','经常漏服']},{name:'您是否因不适自行减少或停用药物？',options:['没有','偶尔','经常']}]},
+    ecog_form:{questions:[{name:'您目前日常活动是否受限？',options:['完全正常','轻度受限','可自理','需部分协助']}]},
+    pain_form:{questions:[{name:'请评价您当前的疼痛程度',options:['无痛','轻度疼痛','中度疼痛','重度疼痛']},{name:'疼痛是否影响您的睡眠？',options:['没有影响','偶有影响','经常影响']}]}
   };
   const tags={
-    '慢病管理项目':['高依从性患者','心理风险关注','老年患者'],
-    '肿瘤随访项目':['靶向治疗患者','高疼痛风险']
+    '慢病管理项目':{'高依从性患者':['高依从性','中等依从性','低依从性'],'心理风险关注':['无风险','轻度风险','中度风险','高风险'],'老年患者':['60–69 岁','70–79 岁','80 岁及以上']},
+    '肿瘤随访项目':{'靶向治疗患者':['靶向治疗中','靶向治疗后随访'],'高疼痛风险':['中度疼痛','重度疼痛','爆发痛']}
   };
-  const project=document.querySelector('#project'),scale=document.querySelector('#scale'),view=document.querySelector('.catalogue');
-  const tagOptions=()=>tags[project.value].map(tag=>'<option value="'+tag+'">'+tag+'</option>').join('');
+  const project=document.querySelector('#project'),relationType=document.querySelector('#relationType'),scale=document.querySelector('#scale'),sourceLabel=document.querySelector('#sourceLabel span'),view=document.querySelector('.catalogue');
+  const tagOptions=()=>Object.keys(tags[project.value]).map(tag=>'<option value="'+tag+'">'+tag+'</option>').join('');
+  function refreshSources(){
+    const type=relationType.value,list=sources[type][project.value]||[];
+    sourceLabel.textContent=(type==='scale'?'已有量表':'已有问卷')+' *';
+    scale.innerHTML=list.map(item=>'<option value="'+item.id+'">'+item.name+'</option>').join('');
+    render();
+  }
   function render(){
-    const questions=scales[scale.value].questions;
+    const questions=forms[scale.value]?.questions||[];
     view.className='scale-detail show add-scale-detail option-tag-detail';
-    view.innerHTML='<div class="detail-title"><div><span class="eyebrow">选项标签关联</span><h2>量表全部题目与选项</h2><p>为每个选项选择一个标签；标签关联后，再选择该标签的更新方式。</p></div></div>'+questions.map((question,questionIndex)=>'<article class="question option-tag-question"><div class="option-tag-question-head"><span class="question-number">题目 '+(questionIndex+1)+'</span><h3>'+question.name+'</h3><p>该题所有选项均可独立关联标签。</p></div><div class="option-tag-table"><div class="option-tag-head"><b>题目选项</b><b>关联标签</b><b>标签更新方式</b><b>状态</b></div>'+question.options.map((option,optionIndex)=>'<div class="option-tag-row"><div><b>'+option+'</b><small class="code">Q'+String(questionIndex+1).padStart(2,'0')+'_O'+String(optionIndex+1).padStart(2,'0')+'</small></div><select class="tag-select"><option value="">请选择标签</option>'+tagOptions()+'</select><select class="rule-select" disabled><option value="">请选择更新方式</option><option value="覆盖">覆盖</option><option value="累加">累加</option></select><span class="pill gray">未关联</span></div>').join('')+'</div></article>').join('')+'<div class="note"><b>更新规则：</b>覆盖表示以本次结果更新患者的该标签；累加表示在已有标签命中次数基础上增加一次。</div>';
-    view.querySelectorAll('.tag-select').forEach(select=>select.addEventListener('change',()=>{const row=select.closest('.option-tag-row'),rule=row.querySelector('.rule-select'),pill=row.querySelector('.pill');rule.disabled=!select.value;if(!select.value){rule.value='';pill.textContent='未关联';pill.className='pill gray'}else{pill.textContent='待选更新方式';pill.className='pill blue'}}));
+    view.innerHTML='<div class="detail-title"><div><span class="eyebrow">选项标签关联</span><h2>全部题目与选项</h2><p>为每个选项依次关联标签、标签值域及标签更新方式。</p></div></div>'+questions.map((question,questionIndex)=>'<article class="question option-tag-question"><div class="option-tag-question-head"><span class="question-number">题目 '+(questionIndex+1)+'</span><h3>'+question.name+'</h3><p>该题所有选项均可独立关联标签及具体标签值域。</p></div><div class="option-tag-table"><div class="option-tag-head"><b>题目选项</b><b>关联标签</b><b>标签值域</b><b>标签更新方式</b><b>状态</b></div>'+question.options.map((option,optionIndex)=>'<div class="option-tag-row"><div><b>'+option+'</b><small class="code">Q'+String(questionIndex+1).padStart(2,'0')+'_O'+String(optionIndex+1).padStart(2,'0')+'</small></div><select class="tag-select"><option value="">请选择标签</option>'+tagOptions()+'</select><select class="domain-select" disabled><option value="">请先选择标签</option></select><select class="rule-select" disabled><option value="">请先选择标签值域</option><option value="覆盖">覆盖</option><option value="累加">累加</option></select><span class="pill gray">未关联</span></div>').join('')+'</div></article>').join('')+'<div class="note"><b>更新规则：</b>覆盖表示以本次提交的选项结果更新患者对应标签值域；累加表示在该标签值域已有命中次数基础上增加一次。</div>';
+    view.querySelectorAll('.tag-select').forEach(select=>select.addEventListener('change',()=>{const row=select.closest('.option-tag-row'),domain=row.querySelector('.domain-select'),rule=row.querySelector('.rule-select'),pill=row.querySelector('.pill'),values=tags[project.value][select.value]||[];domain.innerHTML='<option value="">请选择标签值域</option>'+values.map(value=>'<option value="'+value+'">'+value+'</option>').join('');domain.disabled=!select.value;rule.value='';rule.disabled=true;pill.textContent=select.value?'待选标签值域':'未关联';pill.className='pill '+(select.value?'blue':'gray')}));
+    view.querySelectorAll('.domain-select').forEach(select=>select.addEventListener('change',()=>{const row=select.closest('.option-tag-row'),rule=row.querySelector('.rule-select'),pill=row.querySelector('.pill');rule.disabled=!select.value;rule.value='';pill.textContent=select.value?'待选更新方式':'待选标签值域';pill.className='pill blue'}));
     view.querySelectorAll('.rule-select').forEach(select=>select.addEventListener('change',()=>{const pill=select.closest('.option-tag-row').querySelector('.pill');pill.textContent=select.value?'已关联':'待选更新方式';pill.className='pill '+(select.value?'green':'blue')}));
   }
-  project.addEventListener('change',render);scale.addEventListener('change',render);
-  document.querySelector('#save').addEventListener('click',()=>{const tagSelects=[...view.querySelectorAll('.tag-select')],ruleSelects=[...view.querySelectorAll('.rule-select')];if(tagSelects.some(item=>!item.value)||ruleSelects.some(item=>!item.value)){alert('请为每个题目选项选择标签，并设置标签更新方式。');return}document.querySelector('#saved').classList.add('show')});
-  render();
+  project.addEventListener('change',refreshSources);relationType.addEventListener('change',refreshSources);scale.addEventListener('change',render);
+  document.querySelector('#save').addEventListener('click',()=>{const tagSelects=[...view.querySelectorAll('.tag-select')],domainSelects=[...view.querySelectorAll('.domain-select')],ruleSelects=[...view.querySelectorAll('.rule-select')];if(tagSelects.some(item=>!item.value)||domainSelects.some(item=>!item.value)||ruleSelects.some(item=>!item.value)){alert('请为每个题目选项完成标签、标签值域和更新方式的关联。');return}document.querySelector('#saved').classList.add('show')});
+  refreshSources();
 });
