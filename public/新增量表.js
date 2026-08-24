@@ -1,46 +1,10 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const scales = {
-    base: { questions: [{ name: '请问您的性别？', options: ['男', '女', '未说明'] }, { name: '您的最高教育程度是？', options: ['小学及以下', '初中', '高中/中专', '大学及以上'] }] },
-    phq: { questions: [{ name: '做事时提不起劲或没有兴趣', options: ['完全不会', '有几天', '一半以上天数', '几乎每天'] }, { name: '感到心情低落、沮丧或绝望', options: ['完全不会', '有几天', '一半以上天数', '几乎每天'] }] },
-    ecog: { questions: [{ name: '您的体力状态评分', options: ['0 分', '1 分', '2 分', '3 分', '4 分', '5 分'] }] }
-  };
-  const fields = {
-    common: [
-      { code: 'gender', name: '患者主数据 · 性别', desc: '患者基本主数据字段', domains: ['男 · MALE', '女 · FEMALE', '未知 · UNKNOWN'] },
-      { code: 'education_level', name: '患者主数据 · 教育程度', desc: '患者基本主数据字段', domains: ['小学及以下 · PRIMARY', '初中 · MIDDLE', '高中/中专 · HIGH_SCHOOL', '大学及以上 · COLLEGE'] },
-      { code: 'symptom_frequency', name: '量表标准字段 · 症状发生频率', desc: '通用量表标准字段', domains: ['完全不会 · NONE', '有几天 · SEVERAL_DAYS', '一半以上天数 · HALF_DAYS', '几乎每天 · EVERY_DAY'] },
-      { code: 'performance_status', name: '量表标准字段 · 体力状态评分', desc: '通用量表标准字段', domains: ['0 分 · ECOG_0', '1 分 · ECOG_1', '2 分 · ECOG_2', '3 分 · ECOG_3', '4 分 · ECOG_4', '5 分 · ECOG_5'] }
-    ],
-    '慢病管理项目': [{ code: 'adherence_level', name: '项目字典字段 · 依从性等级', desc: '慢病管理项目患者字典字段', domains: ['高依从性 · HIGH', '中等依从性 · MEDIUM', '低依从性 · LOW'] }],
-    '肿瘤随访项目': [{ code: 'disease_subtype', name: '项目字典字段 · 疾病分型', desc: '肿瘤随访项目患者字典字段', domains: ['腺癌 · ADENO', '鳞癌 · SQUAMOUS', '小细胞癌 · SCLC', '其他 · OTHER'] }]
-  };
-  const project = document.getElementById('project'), scale = document.getElementById('scale');
-  document.getElementById('question').closest('label').style.display = 'none';
-  document.querySelectorAll('.setup')[1].style.display = 'none';
-  document.querySelector('.mappings').style.display = 'none';
-  document.querySelector('.setup').insertAdjacentHTML('afterend', '<section class="catalogue"></section>');
-  const view = document.querySelector('.catalogue');
-  view.className = 'scale-detail show add-scale-detail';
-  const availableFields = () => [...fields.common, ...(fields[project.value] || [])];
-  function render() {
-    const available = availableFields(), questions = scales[scale.value].questions;
-    view.innerHTML = `<div class="detail-title"><div><span class="eyebrow">题目字段关联</span><h2>量表题目与字段映射</h2><p>每道题关联一个字段；字段选定后，为该题每个选项配置一个对应值域。</p></div></div>${questions.map((q, qi) => `<article class="question add-question" data-question="${qi}"><div class="add-question-top"><div><span class="question-number">题目 ${qi + 1}</span><h3>${q.name}</h3></div><label>关联字段<select class="field-select"><option value="">请选择关联字段</option>${available.map(f => `<option value="${f.code}">${f.name}</option>`).join('')}</select></label></div><div class="field-map"><div class="from">量表题目：<b>${q.name}</b></div><div class="arrow">→</div><div class="to"><b>待关联字段</b><span>选择字段后展示选项和值域</span></div></div><div class="option-links"></div></article>`).join('')}<div class="note"><b>关联规则：</b>一个量表题目关联一个字段；每个题目选项通过单选下拉框，最多关联一个值域。</div>`;
-    view.querySelectorAll('.field-select').forEach(select => select.onchange = () => expand(select));
-  }
-  function expand(select) {
-    const question = select.closest('.add-question'), q = scales[scale.value].questions[question.dataset.question];
-    const field = availableFields().find(f => f.code === select.value), map = question.querySelector('.field-map'), options = question.querySelector('.option-links');
-    if (!field) { map.innerHTML = `<div class="from">量表题目：<b>${q.name}</b></div><div class="arrow">→</div><div class="to"><b>待关联字段</b><span>选择字段后展示选项和值域</span></div>`; options.innerHTML = ''; return; }
-    map.innerHTML = `<div class="from">量表题目：<b>${q.name}</b></div><div class="arrow">→</div><div class="to"><b>关联字段：${field.name}</b><span class="code">${field.code}</span></div>`;
-    options.innerHTML = `<div class="field-linked"><b>已关联字段</b><span>${field.desc}</span></div><div class="option-head"><b>题目选项</b><b>关联值域（每个选项最多 1 个）</b></div>${q.options.map((option, oi) => `<div class="option-link"><div><b>${option}</b><small class="code">Q${String(Number(question.dataset.question) + 1).padStart(2, '0')}_O${String(oi + 1).padStart(2, '0')}</small></div><select class="domain-select"><option value="">请选择对应值域</option>${field.domains.map(domain => `<option>${domain}</option>`).join('')}</select><span class="pill gray">未关联</span></div>`).join('')}`;
-    options.querySelectorAll('.domain-select').forEach(domain => domain.onchange = () => { const pill = domain.parentElement.querySelector('.pill'); pill.textContent = domain.value ? '已关联' : '未关联'; pill.className = `pill ${domain.value ? 'blue' : 'gray'}`; });
-  }
-  scale.onchange = render;
-  project.onchange = render;
-  document.getElementById('save').onclick = () => {
-    const fieldSelects = [...view.querySelectorAll('.field-select')], domainSelects = [...view.querySelectorAll('.domain-select')];
-    if (fieldSelects.some(x => !x.value) || domainSelects.some(x => !x.value)) { alert('请先完成每道题的字段关联，以及各选项的值域关联。'); return; }
-    document.getElementById('saved').classList.add('show');
-  };
-  render();
+document.addEventListener('DOMContentLoaded',()=>{
+  const sources={scale:{'慢病管理项目':[{id:'base',name:'患者基础信息补充量表'},{id:'phq',name:'PHQ-9 抑郁筛查量表'}],'肿瘤随访项目':[{id:'ecog',name:'ECOG 体力状况评分'}]},questionnaire:{'慢病管理项目':[{id:'phq_form',name:'PHQ-9 患者自评问卷'},{id:'adherence_form',name:'用药依从性随访问卷'}],'肿瘤随访项目':[{id:'ecog_form',name:'体力状态随访问卷'},{id:'pain_form',name:'疼痛情况随访问卷'}]}};
+  const forms={base:{questions:[{name:'请问您的性别？',options:['男','女','未说明']},{name:'您的最高教育程度是？',options:['小学及以下','初中','高中/中专','大学及以上']}]},phq:{questions:[{name:'做事时提不起劲或没有兴趣',options:['完全不会','有几天','一半以上天数','几乎每天']},{name:'感到心情低落、沮丧或绝望',options:['完全不会','有几天','一半以上天数','几乎每天']}]},ecog:{questions:[{name:'您的体力状态评分',options:['0 分','1 分','2 分','3 分','4 分','5 分']}]},phq_form:{questions:[{name:'过去两周，您是否感到情绪低落？',options:['完全没有','偶尔出现','经常出现','几乎每天']},{name:'过去两周，您是否感到精力不足？',options:['完全没有','偶尔出现','经常出现','几乎每天']}]},adherence_form:{questions:[{name:'过去一周，您是否按时服药？',options:['每天按时','偶尔漏服','经常漏服']},{name:'您是否因不适自行减少或停用药物？',options:['没有','偶尔','经常']}]},ecog_form:{questions:[{name:'您目前日常活动是否受限？',options:['完全正常','轻度受限','可自理','需部分协助']}]},pain_form:{questions:[{name:'请评价您当前的疼痛程度',options:['无痛','轻度疼痛','中度疼痛','重度疼痛']},{name:'疼痛是否影响您的睡眠？',options:['没有影响','偶有影响','经常影响']}]}};
+  const tags={'慢病管理项目':{'高依从性患者':['高依从性','中等依从性','低依从性'],'心理风险关注':['无风险','轻度风险','中度风险','高风险'],'老年患者':['60–69 岁','70–79 岁','80 岁及以上']},'肿瘤随访项目':{'靶向治疗患者':['靶向治疗中','靶向治疗后随访'],'高疼痛风险':['中度疼痛','重度疼痛','爆发痛']}};
+  const project=document.querySelector('#project'),relationType=document.querySelector('#relationType'),scale=document.querySelector('#scale'),sourceLabel=document.querySelector('#sourceLabel span'),view=document.querySelector('.catalogue');
+  const tagOptions=()=>Object.keys(tags[project.value]).map(tag=>'<option value="'+tag+'">'+tag+'</option>').join('');
+  function refreshSources(){const type=relationType.value,list=sources[type][project.value]||[];sourceLabel.textContent=(type==='scale'?'已有量表':'已有问卷')+' *';scale.innerHTML=list.map(item=>'<option value="'+item.id+'">'+item.name+'</option>').join('');render()}
+  function render(){const questions=forms[scale.value]?.questions||[];view.className='scale-detail show add-scale-detail option-tag-detail';view.innerHTML='<div class="detail-title"><div><span class="eyebrow">选项标签关联</span><h2>全部题目与选项</h2><p>为每个选项依次关联标签及标签值域。</p></div></div>'+questions.map((question,questionIndex)=>'<article class="question option-tag-question"><div class="option-tag-question-head"><span class="question-number">题目 '+(questionIndex+1)+'</span><h3>'+question.name+'</h3><p>该题所有选项均可独立关联标签及具体标签值域。</p></div><div class="option-tag-table"><div class="option-tag-head"><b>题目选项</b><b>关联标签</b><b>标签值域</b><b>状态</b></div>'+question.options.map((option,optionIndex)=>'<div class="option-tag-row"><div><b>'+option+'</b><small class="code">Q'+String(questionIndex+1).padStart(2,'0')+'_O'+String(optionIndex+1).padStart(2,'0')+'</small></div><select class="tag-select"><option value="">请选择标签</option>'+tagOptions()+'</select><select class="domain-select" disabled><option value="">请先选择标签</option></select><span class="pill gray">未关联</span></div>').join('')+'</div></article>').join('');view.querySelectorAll('.tag-select').forEach(select=>select.addEventListener('change',()=>{const row=select.closest('.option-tag-row'),domain=row.querySelector('.domain-select'),pill=row.querySelector('.pill'),values=tags[project.value][select.value]||[];domain.innerHTML='<option value="">请选择标签值域</option>'+values.map(value=>'<option value="'+value+'">'+value+'</option>').join('');domain.disabled=!select.value;pill.textContent=select.value?'待选标签值域':'未关联';pill.className='pill '+(select.value?'blue':'gray')}));view.querySelectorAll('.domain-select').forEach(select=>select.addEventListener('change',()=>{const pill=select.closest('.option-tag-row').querySelector('.pill');pill.textContent=select.value?'已关联':'待选标签值域';pill.className='pill '+(select.value?'green':'blue')}))}
+  project.addEventListener('change',refreshSources);relationType.addEventListener('change',refreshSources);scale.addEventListener('change',render);document.querySelector('#save').addEventListener('click',()=>{const tagSelects=[...view.querySelectorAll('.tag-select')],domainSelects=[...view.querySelectorAll('.domain-select')];if(tagSelects.some(item=>!item.value)||domainSelects.some(item=>!item.value)){alert('请为每个题目选项完成标签和标签值域的关联。');return}document.querySelector('#saved').classList.add('show')});refreshSources();
 });
