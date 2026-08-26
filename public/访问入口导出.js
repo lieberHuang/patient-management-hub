@@ -1,0 +1,9 @@
+document.addEventListener('DOMContentLoaded',()=>{
+  const base='https://lieberHuang.github.io/patient-management-hub/';
+  const entries=[{name:'用药记录',description:'查看当前项目下患者的用药记录与提醒推送状态。',path:'用药记录.html'},{name:'指标记录',description:'查看并维护当前项目下已新增的患者指标定义。',path:'指标管理.html'}];
+  const escapeHtml=value=>String(value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+  const qrUrl=link=>`https://api.qrserver.com/v1/create-qr-code/?size=300x300&format=png&data=${encodeURIComponent(link)}`;
+  document.querySelector('#entryGrid').innerHTML=entries.map((entry,index)=>{const link=base+entry.path,qr=qrUrl(link);return `<section class="panel entry-card"><div class="qr-box"><img src="${qr}" alt="${escapeHtml(entry.name)}访问二维码"></div><div class="entry-content"><h2>${escapeHtml(entry.name)}</h2><p>${escapeHtml(entry.description)}</p><span class="entry-link-label">访问链接</span><a class="entry-link" href="${link}" target="_blank" rel="noopener" title="${link}">${link}</a><div class="entry-actions"><button class="button primary copy-link" data-index="${index}" type="button">复制链接</button><a class="button ghost" href="${qr}" target="_blank" rel="noopener">打开二维码</a></div><small class="copy-status" data-status="${index}"></small></div></section>`}).join('');
+  const copy=text=>{if(navigator.clipboard?.writeText)return navigator.clipboard.writeText(text);const input=document.createElement('textarea');input.value=text;document.body.appendChild(input);input.select();document.execCommand('copy');input.remove();return Promise.resolve()};
+  document.querySelector('#entryGrid').addEventListener('click',event=>{const button=event.target.closest('.copy-link');if(!button)return;const index=Number(button.dataset.index),link=base+entries[index].path;Promise.resolve(copy(link)).then(()=>{const status=document.querySelector(`[data-status="${index}"]`);status.textContent='链接已复制';setTimeout(()=>{status.textContent=''},1800)})});
+});
