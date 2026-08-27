@@ -1,45 +1,50 @@
 document.addEventListener('DOMContentLoaded',()=>{
-  document.head.insertAdjacentHTML('beforeend','<style>.rule-builder .condition-row.has-required{grid-template-columns:1.25fr .9fr 1fr auto 28px}.condition-required{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;color:#53657a;cursor:pointer}.rule-builder .condition-required input{width:auto;margin:0;padding:0}@media(max-width:700px){.rule-builder .condition-row.has-required{grid-template-columns:1fr}}</style>');
+  document.head.insertAdjacentHTML('beforeend','<style>.rule-builder .condition-row.has-required{grid-template-columns:1.25fr .9fr 1fr auto 28px}.condition-required{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:12px;color:#53657a;cursor:pointer}.rule-builder .condition-required input{width:auto;margin:0;padding:0}.value-domain{margin-top:12px;padding:14px;border:1px solid #e3ebf5;border-radius:9px;background:#fbfdff}.value-domain-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.value-domain-head b{font-size:13px;color:#1c2b40}.value-domain-head b span{color:#2d6cdf}.value-domain-head button{padding:6px 9px}.domain-conditions{margin-top:8px}.domain-condition-label{display:block;margin-top:12px;color:#718198;font-size:12px}.domain-modal .modal-content{width:420px}.domain-modal p{margin:0;color:#718198;font-size:13px;line-height:1.55}.domain-modal label{display:block;margin-top:18px;color:#53657a;font-size:12px;font-weight:600}.domain-modal input{width:100%;margin-top:7px}.domain-modal footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}@media(max-width:700px){.rule-builder .condition-row.has-required{grid-template-columns:1fr}.value-domain-head{align-items:flex-start;flex-direction:column}.domain-modal .modal-content{width:calc(100vw - 28px)}}</style>');
+  const nameLabel=document.querySelector('#planName')?.closest('label');
+  if(nameLabel){nameLabel.childNodes[0].nodeValue='标签名称 ';document.querySelector('#planName').placeholder='请输入标签名称';}
   document.querySelector('input[name="validation"]')?.closest('.full')?.remove();
-  document.querySelector('.rule-builder .section-head small').textContent='配置推送计划名称及条件关系。';
+  document.querySelector('.rule-builder .section-head small').textContent='配置标签名称及条件关系。';
+  document.querySelector('#addCondition').textContent='＋ 添加值域';
   const $=s=>document.querySelector(s);
   const fields=[['年龄','number'],['确诊年份','date'],['诊断年份','date'],['性别','enum'],['诊断病种','enum'],['诊断医院','enum'],['患者来源渠道','enum'],['入组情况','enum'],['最近一次入组申请时间','date'],['最近一次入组申请时间距离当前日数','number'],['理赔申请次数','number'],['最近一次理赔状态','enum'],['最近一次理赔时间','date'],['最近一次理赔时间距离当前日数','number'],['是否添加企业微信','enum'],['企业微信最后一条消息距离当前日数','number'],['用药盒数','number']];
   const numeric=['大于','小于','等于','大于等于','小于等于','不等于'],enums=['等于','不等于'];
-  let conditions=[{field:'年龄',type:'number',operator:'大于',value:'65',required:false}];
+  const newCondition=()=>({field:'性别',type:'enum',operator:'等于',value:'',required:false});
+  let domains=[{name:'高风险',conditions:[{field:'年龄',type:'number',operator:'大于',value:'65',required:false}]}];
   const relation=()=>document.querySelector('input[name="relation"]:checked').value;
-  const updateEstimate=()=>{
-    const total=436,filled=conditions.filter(c=>c.value.trim()).length,required=conditions.filter(c=>c.required).length;
-    const rate=relation()==='满足全部'?Math.max(.08,.38-(filled-1)*.09):Math.max(.08,Math.min(.78,.38+(filled-1)*.12-required*.09));
-    $('#estimatedUsers').textContent=Math.round(total*rate)+' 人';$('#projectUsers').textContent=total+' 人';
-  };
+  const conditionText=condition=>`${condition.field}${condition.operator}${condition.value||'…'}${relation()==='满足任意一条'&&condition.required?'（必须满足）':''}`;
+  const allConditions=()=>domains.flatMap(domain=>domain.conditions);
+  const updateEstimate=()=>{const total=436,conditions=allConditions(),filled=conditions.filter(c=>c.value.trim()).length,required=conditions.filter(c=>c.required).length,rate=relation()==='满足全部'?Math.max(.08,.38-(filled-1)*.09):Math.max(.08,Math.min(.78,.38+(filled-1)*.12-required*.09));$('#estimatedUsers').textContent=Math.round(total*rate)+' 人';$('#projectUsers').textContent=total+' 人';};
+  const row=(item,domainIndex,conditionIndex,isAny)=>`<div class="condition-row ${isAny?'has-required':''}"><select class="condition-field" data-domain="${domainIndex}" data-condition="${conditionIndex}">${fields.map(([name,type])=>`<option value="${name}" data-type="${type}" ${item.field===name?'selected':''}>${name}</option>`).join('')}</select><select class="condition-operator" data-domain="${domainIndex}" data-condition="${conditionIndex}">${(item.type==='enum'?enums:numeric).map(op=>`<option ${item.operator===op?'selected':''}>${op}</option>`).join('')}</select><input class="condition-value" data-domain="${domainIndex}" data-condition="${conditionIndex}" value="${item.value}" placeholder="请输入判断值">${isAny?`<label class="condition-required"><input type="checkbox" data-domain="${domainIndex}" data-condition="${conditionIndex}" ${item.required?'checked':''}> 必须满足</label>`:''}<button class="condition-remove" data-domain="${domainIndex}" data-condition="${conditionIndex}" type="button" ${item.domainLength===1?'hidden':''}>×</button></div>`;
   const render=()=>{
     const isAny=relation()==='满足任意一条';
-    $('#conditionList').innerHTML=conditions.map((item,index)=>`<div class="condition-row ${isAny?'has-required':''}"><select class="condition-field" data-index="${index}">${fields.map(([name,type])=>`<option value="${name}" data-type="${type}" ${item.field===name?'selected':''}>${name}</option>`).join('')}</select><select class="condition-operator" data-index="${index}">${(item.type==='enum'?enums:numeric).map(op=>`<option ${item.operator===op?'selected':''}>${op}</option>`).join('')}</select><input class="condition-value" data-index="${index}" value="${item.value}" placeholder="请输入判断值">${isAny?`<label class="condition-required"><input type="checkbox" data-index="${index}" ${item.required?'checked':''}> 必须满足</label>`:''}<button class="condition-remove" data-index="${index}" type="button" ${conditions.length===1?'hidden':''}>×</button></div>`).join('');
+    $('#conditionList').innerHTML=domains.map((domain,domainIndex)=>`<section class="value-domain"><div class="value-domain-head"><b>标签值域：<span>${domain.name}</span></b><button class="button ghost small add-domain-condition" data-domain="${domainIndex}" type="button">＋ 添加判断条件</button></div><small class="domain-condition-label">判断条件</small><div class="domain-conditions">${domain.conditions.map((item,conditionIndex)=>row({...item,domainLength:domain.conditions.length},domainIndex,conditionIndex,isAny)).join('')}</div></section>`).join('');
     preview();
   };
-  const preview=()=>{
-    const name=$('#planName').value.trim()||'未命名推送计划',currentRelation=relation();
-    const summary=conditions.map(c=>`${c.field}${c.operator}${c.value||'…'}${currentRelation==='满足任意一条'&&c.required?'（必须满足）':''}`).join(currentRelation==='满足全部'?' 且 ':' 或 ');
-    $('#resultPreview').textContent=`“${name}”将匹配${currentRelation}：${summary}的患者。`;
-    updateEstimate();
+  const preview=()=>{const name=$('#planName').value.trim()||'未命名标签',summary=domains.map(domain=>`【${domain.name}】${domain.conditions.map(conditionText).join(relation()==='满足全部'?' 且 ':' 或 ')}`).join('；');$('#resultPreview').textContent=`“${name}”将依据${relation()}的判断条件匹配患者：${summary}。`;updateEstimate();};
+  const closeDomainModal=()=>$('#domainModal')?.remove();
+  const openDomainModal=()=>{
+    document.body.insertAdjacentHTML('beforeend','<div class="modal show domain-modal" id="domainModal"><div class="modal-content"><h2>添加标签值域</h2><p>请先输入标签值域，确认后将为该值域创建对应的条件判断配置。</p><label>标签值域 <i>*</i><input id="newDomainName" maxlength="30" placeholder="例如：高风险、依从性良好"></label><footer><button class="button ghost" id="cancelDomain" type="button">取消</button><button class="button primary" id="confirmDomain" type="button">下一步</button></footer></div></div>');
+    const input=$('#newDomainName');input.focus();
+    $('#cancelDomain').addEventListener('click',closeDomainModal);
+    $('#domainModal').addEventListener('click',event=>{if(event.target.id==='domainModal')closeDomainModal()});
+    const create=()=>{const name=input.value.trim();if(!name){input.focus();return}domains.push({name,conditions:[newCondition()]});closeDomainModal();render();document.querySelector(`.condition-value[data-domain="${domains.length-1}"][data-condition="0"]`)?.focus();};
+    $('#confirmDomain').addEventListener('click',create);
+    input.addEventListener('keydown',event=>{if(event.key==='Enter')create()});
   };
-  $('#addCondition').addEventListener('click',()=>{conditions.push({field:'性别',type:'enum',operator:'等于',value:'',required:false});render()});
+  $('#addCondition').addEventListener('click',openDomainModal);
   $('#conditionList').addEventListener('change',e=>{
-    const i=Number(e.target.dataset.index),item=conditions[i];
-    if(e.target.classList.contains('condition-field')){const option=e.target.selectedOptions[0];item.field=e.target.value;item.type=option.dataset.type;item.operator=item.type==='enum'?'等于':'大于';render()}
-    if(e.target.classList.contains('condition-operator')){item.operator=e.target.value;preview()}
-    if(e.target.matches('.condition-required input')){item.required=e.target.checked;preview()}
+    const domainIndex=Number(e.target.dataset.domain),conditionIndex=Number(e.target.dataset.condition),condition=domains[domainIndex]?.conditions[conditionIndex];if(!condition)return;
+    if(e.target.classList.contains('condition-field')){const option=e.target.selectedOptions[0];condition.field=e.target.value;condition.type=option.dataset.type;condition.operator=condition.type==='enum'?'等于':'大于';render()}
+    if(e.target.classList.contains('condition-operator')){condition.operator=e.target.value;preview()}
+    if(e.target.matches('.condition-required input')){condition.required=e.target.checked;preview()}
   });
-  $('#conditionList').addEventListener('input',e=>{if(e.target.classList.contains('condition-value')){conditions[Number(e.target.dataset.index)].value=e.target.value;preview()}});
-  $('#conditionList').addEventListener('click',e=>{const button=e.target.closest('.condition-remove');if(button){conditions.splice(Number(button.dataset.index),1);render()}});
+  $('#conditionList').addEventListener('input',e=>{if(e.target.classList.contains('condition-value')){const condition=domains[Number(e.target.dataset.domain)]?.conditions[Number(e.target.dataset.condition)];if(condition){condition.value=e.target.value;preview()}}});
+  $('#conditionList').addEventListener('click',e=>{
+    const addButton=e.target.closest('.add-domain-condition');if(addButton){domains[Number(addButton.dataset.domain)].conditions.push(newCondition());render();return}
+    const removeButton=e.target.closest('.condition-remove');if(removeButton){const domain=domains[Number(removeButton.dataset.domain)];domain.conditions.splice(Number(removeButton.dataset.condition),1);render();}
+  });
   $('#planName').addEventListener('input',preview);
   document.querySelectorAll('input[name="relation"]').forEach(input=>input.addEventListener('change',render));
-  $('#ruleForm').addEventListener('submit',e=>{
-    e.preventDefault();const name=$('#planName').value.trim();
-    if(!name||conditions.some(c=>!c.value.trim())){alert('请完成推送计划名称及每个条件的判断值');return}
-    const currentRelation=relation(),now=new Date();
-    const record={id:'CUSTOM_'+Date.now(),code:'TAG_CUSTOM_'+Date.now().toString().slice(-8),name,relation:currentRelation,conditions:conditions.map(c=>`${c.field}${c.operator}${c.value}${currentRelation==='满足任意一条'&&c.required?'（必须满足）':''}`).join(currentRelation==='满足全部'?' 且 ':' 或 '),createdAt:`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,status:'online'};
-    let items=[];try{items=JSON.parse(localStorage.getItem('patientCustomTags')||'[]')}catch{}items.unshift(record);localStorage.setItem('patientCustomTags',JSON.stringify(items));location.href='标签管理.html?tab=custom';
-  });
+  $('#ruleForm').addEventListener('submit',e=>{e.preventDefault();const name=$('#planName').value.trim(),conditions=allConditions();if(!name||conditions.some(c=>!c.value.trim())){alert('请完成标签名称及每个值域的条件判断值');return}const now=new Date(),record={id:'CUSTOM_'+Date.now(),code:'TAG_CUSTOM_'+Date.now().toString().slice(-8),name,relation:relation(),conditions:domains.map(domain=>`【${domain.name}】${domain.conditions.map(conditionText).join(relation()==='满足全部'?' 且 ':' 或 ')}`).join('；'),createdAt:`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`,status:'online'};let items=[];try{items=JSON.parse(localStorage.getItem('patientCustomTags')||'[]')}catch{}items.unshift(record);localStorage.setItem('patientCustomTags',JSON.stringify(items));location.href='标签管理.html?tab=custom';});
   render();
 });
